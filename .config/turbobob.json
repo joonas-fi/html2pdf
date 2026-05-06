@@ -6,7 +6,7 @@
 	"builders": [
 		{
 			"name": "default",
-			"uses": "docker://fn61/buildkit-golang:20210702_0854_7adda4a2",
+			"uses": "docker://fn61/buildkit-golang:20251124_1405_720e0dc0",
 			"mount_source": "",
 			"mount_destination": "/workspace",
 			"workdir": "/workspace",
@@ -14,19 +14,6 @@
 				"build": ["bin/build.sh"],
 				"dev": ["bash"]
 			}
-		},
-		{
-			"name": "publisher",
-			"uses": "docker://fn61/buildkit-publisher:20200228_1755_83c203ff",
-			"mount_destination": "/workspace",
-			"commands": {
-				"publish": ["publish-gh.sh", "function61/html2pdf", "rel/"],
-				"dev": ["bash"]
-			},
-			"pass_envs": [
-				"GITHUB_TOKEN",
-				"EVENTHORIZON"
-			]
 		}
 	],
 	"os_arches": {

@@ -1,7 +1,7 @@
 package h2ptypes
 
 type Request struct {
-	HtmlBase64 []byte   `json:"html_base64"`
+	HTMLBase64 []byte   `json:"html_base64"`
 	Options    *Options `json:"options"`
 }
 

@@ -2,12 +2,10 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 
-	"github.com/function61/gokit/log/logex"
 	"github.com/function61/gokit/net/http/httputils"
 	"github.com/function61/gokit/os/osutil"
 	"github.com/spf13/cobra"
@@ -18,20 +16,18 @@ func serverEntry() *cobra.Command {
 		Use:   "server",
 		Short: "Start server (also good for dev/testing)",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			logger := logex.StandardLogger()
-
-			osutil.ExitIfError(runServer(
-				osutil.CancelOnInterruptOrTerminate(logger),
-				logger))
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return runServer(cmd.Context())
 		},
 	}
 }
 
-func runServer(ctx context.Context, logger *log.Logger) error {
+func runServer(ctx context.Context) error {
 	srv := &http.Server{
 		Addr:    ":80",
 		Handler: newServerHandler(),
+
+		ReadHeaderTimeout: httputils.DefaultReadHeaderTimeout,
 	}
 
 	// this codepath we're on right now is not used in Lambda

@@ -5,12 +5,15 @@ source /build-common.sh
 BINARY_NAME="html2pdf"
 COMPILE_IN_DIRECTORY="cmd/html2pdf"
 
+# blows up for some reason
+export SKIP_GENERATECODEDOCS=y
+
 function maybeDownloadWkhtmlToPdf {
 	if [ -f wkhtmltopdf ]; then
 		return # already downloaded
 	fi
 
-	heading "Downloading wkhtmltopdf"
+	heading2 "Downloading wkhtmltopdf"
 
 	apt install -y xz-utils
 
@@ -45,5 +48,3 @@ function packageLambdaFunction {
 maybeDownloadWkhtmlToPdf
 
 standardBuildProcess
-
-packageLambdaFunction
