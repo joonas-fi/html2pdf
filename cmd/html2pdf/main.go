@@ -14,8 +14,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/function61/gokit/app/aws/lambdautils"
-	"github.com/function61/gokit/app/dynversion"
-	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/app/cli"
 	"github.com/function61/html2pdf/pkg/h2ptypes"
 	"github.com/function61/html2pdf/pkg/html2pdfclient"
 	"github.com/spf13/cobra"
@@ -28,16 +27,14 @@ func main() {
 	}
 
 	app := &cobra.Command{
-		Use:     os.Args[0],
-		Short:   "HTML2PDF",
-		Version: dynversion.Version,
+		Short: "HTML2PDF",
 	}
 
 	app.AddCommand(serverEntry())
 	app.AddCommand(clientEntry("client-fn61", html2pdfclient.Function61))
 	app.AddCommand(clientEntry("client-localhost", html2pdfclient.Localhost))
 
-	osutil.ExitIfError(app.Execute())
+	cli.Execute(app)
 }
 
 func newServerHandler() http.Handler {
@@ -77,7 +74,7 @@ func newServerHandler() http.Handler {
 		stdErr := &bytes.Buffer{}
 
 		wkhtmltopdf := exec.Command("./wkhtmltopdf", cmdOpts...)
-		wkhtmltopdf.Stdin = bytes.NewReader(req.HtmlBase64)
+		wkhtmltopdf.Stdin = bytes.NewReader(req.HTMLBase64)
 		wkhtmltopdf.Stdout = pdfBuffer
 		wkhtmltopdf.Stderr = stdErr
 
@@ -99,12 +96,12 @@ func newServerHandler() http.Handler {
 	return mux
 }
 
-func clientEntry(use string, baseUrl string) *cobra.Command {
+func clientEntry(use string, baseURL string) *cobra.Command {
 	return &cobra.Command{
 		Use:   use + " [html]",
 		Short: "Request HTML2PDF operation from server",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			htmlReader := func() io.Reader {
 				if args[0] == "-" {
 					return os.Stdin
@@ -113,22 +110,18 @@ func clientEntry(use string, baseUrl string) *cobra.Command {
 				}
 			}()
 
-			osutil.ExitIfError(client(
-				osutil.CancelOnInterruptOrTerminate(nil),
-				htmlReader,
-				os.Stdout,
-				baseUrl))
+			return client(cmd.Context(), htmlReader, os.Stdout, baseURL)
 		},
 	}
 }
 
-func client(ctx context.Context, htmlReader io.Reader, output io.Writer, baseUrl string) error {
+func client(ctx context.Context, htmlReader io.Reader, output io.Writer, baseURL string) error {
 	html, err := io.ReadAll(htmlReader)
 	if err != nil {
 		return err
 	}
 
-	h2p, err := html2pdfclient.New(baseUrl, html2pdfclient.TokenFromEnv)
+	h2p, err := html2pdfclient.New(baseURL, html2pdfclient.TokenFromEnv)
 	if err != nil {
 		return err
 	}

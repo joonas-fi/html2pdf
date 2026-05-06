@@ -26,17 +26,17 @@ func NoToken() (string, error) {
 }
 
 type Client struct {
-	baseUrl     string
+	baseURL     string
 	bearerToken string
 }
 
-func New(baseUrl string, getToken TokenFn) (*Client, error) {
+func New(baseURL string, getToken TokenFn) (*Client, error) {
 	bearerToken, err := getToken()
 	if err != nil {
 		return nil, fmt.Errorf("getToken: %w", err)
 	}
 
-	return &Client{baseUrl, bearerToken}, nil
+	return &Client{baseURL, bearerToken}, nil
 }
 
 // returns PDF bytes
@@ -46,16 +46,14 @@ func (c *Client) Render(
 	options *h2ptypes.Options,
 ) (io.ReadCloser, error) {
 	req := &h2ptypes.Request{
-		HtmlBase64: []byte(html),
+		HTMLBase64: []byte(html),
 		Options:    options,
 	}
 
-	resp, err := ezhttp.Post(
-		ctx,
-		c.baseUrl+"/render",
+	resp, err := ezhttp.Post(ctx, c.baseURL+"/render",
 		ezhttp.AuthBearer(c.bearerToken),
 		ezhttp.Header("Accept", "application/pdf"), // WTF, API gateway returns base64 unless this is set
-		ezhttp.SendJson(&req))
+		ezhttp.SendJSON(&req))
 	if err != nil {
 		return nil, fmt.Errorf("Html2Pdf: %w", err)
 	}
